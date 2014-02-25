@@ -53,19 +53,20 @@ class SubstitutionCipher(Cipher):
     def _encode_ords(self, plain_ords):
         return map(self._encode_ord, plain_ords)
 
-class Rot(SubstitutionCipher):
+
+class CaesarCipher(SubstitutionCipher):
     """
     Rot-by-N cipher.
     
-    >>> Rot(rot_by=13).encode('ABCD')
+    >>> CaesarCipher(rot_by=13).encode('ABCD')
     'NOPQ'
-    >>> Rot(rot_by=26).encode('ABCD')
+    >>> CaesarCipher(rot_by=26).encode('ABCD')
     'ABCD'
     """
 
     def __init__(self, **kwargs):
         self.rot_by = kwargs.pop('rot_by', 13)
-        super(Rot, self).__init__(**kwargs)
+        super(CaesarCipher, self).__init__(**kwargs)
 
     def _encode_ord(self, plain_ord):
         return (plain_ord + self.rot_by) % len(self.alphabet)
