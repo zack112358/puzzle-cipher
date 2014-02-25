@@ -15,7 +15,13 @@ class Cipher(object):
     """
     def __init__(self, **kwargs):
         self.alphabet = kwargs.pop('alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        self.seed = kwargs.pop('seed', 0)
+        self.random = kwargs.pop('random', random.Random())
+        self.random.seed(self.seed)
         super(Cipher, self).__init__(**kwargs)
+
+    def reset_rand(self):
+        self.random.seed(self.seed)
 
     def ords(self, text):
         """ Translate text to indices into the alphabet """
@@ -42,11 +48,13 @@ class Cipher(object):
 
     def encode_ords(self, plaintext):
         """ Translate plaintext to cipher indices """
+        self.reset_rand()
         return self._encode_ords(self.ords(plaintext))
 
     def _encode_ords(self, plainords):
         """ OVERRIDE ME: translate plain indices to cipher indices """
         return plainords
+
 
 
 class SubstitutionCipher(Cipher):
@@ -86,10 +94,14 @@ class MapSubstitutionCipher(SubstitutionCipher):
     'CDAB'
     >>> MapSubstitutionCipher(mapping=[0,1,2,3]).encode('ABCD')
     'ABCD'
+    >>> a = MapSubstitutionCipher().encode('ABCD')
+    >>> MapSubstitutionCipher().encode('ABCD') == a
+    True
     """
     def __init__(self, **kwargs):
         self.mapping = kwargs.pop('mapping', None)
         super(MapSubstitutionCipher, self).__init__(**kwargs)
+        # random initialization only *after* call to super sets up our RNG
         if self.mapping is None:
             self.mapping = self.random_mapping()
 
@@ -97,7 +109,9 @@ class MapSubstitutionCipher(SubstitutionCipher):
         return self.mapping[plain_ord]
 
     def random_mapping(self):
-        return random.shuffle(range(len(self.alphabet)))
+        mapping = range(len(self.alphabet))
+        self.random.shuffle(mapping)
+        return mapping
 
 
 if __name__ == '__main__':
