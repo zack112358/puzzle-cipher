@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
 
-class cipher(object):
+class Cipher(object):
     """
     Base class for ciphers. Performs identity cipher.
 
-    >>> cipher().encode('ABCD')
+    >>> Cipher().encode('ABCD')
     'ABCD'
-    >>> cipher(alphabet='').encode('ABCD')
+    >>> Cipher(alphabet='').encode('ABCD')
     Traceback (most recent call last):
       ...
     ValueError: substring not found
     """
     def __init__(self, **kwargs):
         self.alphabet = kwargs.pop('alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        super(Cipher, self).__init__(**kwargs)
 
     def ords(self, text):
         """ Translate text to indices into the alphabet """
@@ -45,6 +46,29 @@ class cipher(object):
     def _encode_ords(self, plainords):
         """ OVERRIDE ME: translate plain indices to cipher indices """
         return plainords
+
+
+class SubstitutionCipher(Cipher):
+    """ Substitution cipher base class """
+    def _encode_ords(self, plain_ords):
+        return map(self._encode_ord, plain_ords)
+
+class Rot(SubstitutionCipher):
+    """
+    Rot-by-N cipher.
+    
+    >>> Rot(rot_by=13).encode('ABCD')
+    'NOPQ'
+    >>> Rot(rot_by=26).encode('ABCD')
+    'ABCD'
+    """
+
+    def __init__(self, **kwargs):
+        self.rot_by = kwargs.pop('rot_by', 13)
+        super(Rot, self).__init__(**kwargs)
+
+    def _encode_ord(self, plain_ord):
+        return (plain_ord + self.rot_by) % len(self.alphabet)
 
 
 if __name__ == '__main__':
