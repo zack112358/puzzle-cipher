@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import random
 
 class Cipher(object):
     """
@@ -50,6 +51,9 @@ class Cipher(object):
 
 class SubstitutionCipher(Cipher):
     """ Substitution cipher base class """
+    def __init__(self, **kwargs):
+        super(SubstitutionCipher, self).__init__(**kwargs)
+
     def _encode_ords(self, plain_ords):
         return map(self._encode_ord, plain_ords)
 
@@ -70,6 +74,30 @@ class CaesarCipher(SubstitutionCipher):
 
     def _encode_ord(self, plain_ord):
         return (plain_ord + self.rot_by) % len(self.alphabet)
+
+
+class MapSubstitutionCipher(SubstitutionCipher):
+    """
+    Arbitrary substitution cipher using a mapping of indices into the alphabet.
+    Anything that can be subscripted by the plaintext index to get the
+    ciphertext index can be used as the mapping.
+
+    >>> MapSubstitutionCipher(mapping={0:2,1:3,3:1,2:0}).encode('ABCD')
+    'CDAB'
+    >>> MapSubstitutionCipher(mapping=[0,1,2,3]).encode('ABCD')
+    'ABCD'
+    """
+    def __init__(self, **kwargs):
+        self.mapping = kwargs.pop('mapping', None)
+        super(MapSubstitutionCipher, self).__init__(**kwargs)
+        if self.mapping is None:
+            self.mapping = self.random_mapping()
+
+    def _encode_ord(self, plain_ord):
+        return self.mapping[plain_ord]
+
+    def random_mapping(self):
+        return random.shuffle(range(len(self.alphabet)))
 
 
 if __name__ == '__main__':
