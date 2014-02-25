@@ -12,6 +12,8 @@ class Cipher(object):
     Traceback (most recent call last):
       ...
     ValueError: substring not found
+    >>> Cipher(seed=1).random.random() == Cipher(seed=1).random.random()
+    True
     """
     def __init__(self, **kwargs):
         self.alphabet = kwargs.pop('alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
