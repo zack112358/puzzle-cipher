@@ -116,6 +116,28 @@ class MapSubstitutionCipher(SubstitutionCipher):
         return mapping
 
 
+class SkewedOneTimePadCipher(SubstitutionCipher):
+    """
+    One-time-pad cipher. Since we use Mersenne Twister, not cryptographically
+    secure. However, still effective for puzzle-level analysis. In order that
+    the cipher still be breakable, we need to have a very skewed distribution of
+    random numbers.
+
+    >>> SkewedOneTimePadCipher(skew=26).encode('A'*50)
+    'BBAAAABAAACAABAACEBCABCBAAAACDACABAABABBAACAACAAAD'
+    """
+
+    def __init__(self, **kwargs):
+        self.skew = kwargs.pop('skew', 1) * 1.0
+        super(SkewedOneTimePadCipher, self).__init__(**kwargs)
+
+    def _encode_ord(self, plain_ord):
+        # Repeatable due to use of fixed random seed
+        alpha_size = len(self.alphabet)
+        pad_value = int(self.random.expovariate(self.skew / alpha_size))
+        return (plain_ord + pad_value) % alpha_size
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
