@@ -302,7 +302,7 @@ class Smasher(Cipher):
         return map(self.ord, smashed)
 
 
-class TranspositionCipher(Cipher):
+class ColumnarCipher(Cipher):
     """
     Simple cipher based on matrix transposition. Input
 
@@ -318,12 +318,15 @@ class TranspositionCipher(Cipher):
 
     1 4 7 2 5 8 3 6 9
 
-    >>> 'ABCDEFGHI' | TranspositionCipher(width=3)
+    >>> 'ABCDEFGHI' | ColumnarCipher(width=3)
     'ADGBEHCFI'
+    >>> 'ABCDEFGHI' | ColumnarCipher(width=3, column_order=[2, 0, 1])
+    'CFIADGBEH'
     """
     def __init__(self, **kwargs):
         self.width = kwargs.pop('width', 3)
-        super(TranspositionCipher, self).__init__(**kwargs)
+        self.column_order = kwargs.pop('column_order', range(self.width))
+        super(ColumnarCipher, self).__init__(**kwargs)
 
     def _encode_ords(self, plaintext):
         # Save our input in case it's an iterator
@@ -332,7 +335,8 @@ class TranspositionCipher(Cipher):
             text.append('X')
         height = len(text) // self.width
         for i in range(len(text)):
-            yield text[i * self.width % len(text) + i // height]
+            yield text[i * self.width % len(text) + 
+                       self.column_order[i // height]]
 
 
 if __name__ == '__main__':
