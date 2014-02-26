@@ -21,7 +21,8 @@ class Cipher(object):
         self.alphabet = kwargs.pop('alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
         self.seed = kwargs.pop('seed', 0)
         self.random = kwargs.pop('random', random.Random())
-        self.random.seed(self.seed)
+        if self.seed is not None:
+            self.random.seed(self.seed)
         super(Cipher, self).__init__(**kwargs)
 
     def reset(self):
@@ -221,6 +222,23 @@ class RotatingCipher(IndexedSubstitutionCipher):
     def _encode_ord(self, plain, i):
         alpha_size = len(self.alphabet)
         return (plain + self.init_rot_by + self.increment * i) % alpha_size
+
+
+class ComposedCipher(Cipher):
+    """
+    Composition of two ciphers.
+
+    >>> ComposedCipher(children=(CaesarCipher(rot_by=13), CaesarCipher(rot_by=-13))).encode('ABCD')
+    'ABCD'
+    """
+    def __init__(self, **kwargs):
+        self.children = kwargs.pop('children')
+        super(ComposedCipher, self).__init__(**kwargs)
+
+    def encode_ords(self, ords):
+        for cipher in self.children:
+            ords = cipher.encode_ords(ords)
+        return ords
 
 
 if __name__ == '__main__':
