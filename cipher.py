@@ -11,10 +11,10 @@ have any particular cryptographic merit as such, but they're
 """
 
 import random
-import itertools
 import re
 from fractions import gcd
 from string import punctuation
+from itertools import chain, islice
 
 class Cipher(object):
     """
@@ -191,8 +191,8 @@ class GCDCipher(SubstitutionCipher, ReprCipherMixin):
         a = 2
         b = 2
         while gcd(a, b) > 1:
-            a = self.random.randrange(1000 / divisor)
-            b = self.random.randrange(1000 / divisor)
+            a = self.random.randrange(1000 // divisor)
+            b = self.random.randrange(1000 // divisor)
         return (a * divisor, b * divisor)
 
 
@@ -217,6 +217,21 @@ class SimpleFeedbackCipher(SubstitutionCipher):
     def reset(self):
         super(SimpleFeedbackCipher, self).reset()
         self.feedback = self.init_rot_by
+
+
+class SquareFeedbackCipher(SimpleFeedbackCipher):
+    """
+    For this one, we feed back our output characters into the input so that
+    output_i = input_i + output_{i-1}
+
+    >>> SimpleFeedbackCipher().encode('AAAABBBBCCCCDDDD')
+    'NNNNOPQRTVXZCFIL'
+    """
+
+    def _encode_ord(self, plain_ord):
+        output = (plain_ord + self.feedback ** 2) % len(self.alphabet)
+        self.feedback = output
+        return output
 
 
 class IndexedSubstitutionCipher(Cipher):
@@ -265,7 +280,7 @@ class ComposedCipher(Cipher):
         self.children = kwargs.pop('children')
         super(ComposedCipher, self).__init__(**kwargs)
 
-    def encode_ords(self, ords):
+    def _encode_ords(self, ords):
         for cipher in self.children:
             ords = cipher.encode_ords(ords)
         return ords
@@ -285,6 +300,39 @@ class Smasher(Cipher):
         smashed = [c.upper() if c.upper() in self.alphabet else 'X'
                    for c in smashed]
         return map(self.ord, smashed)
+
+
+class TranspositionCipher(Cipher):
+    """
+    Simple cipher based on matrix transposition. Input
+
+    1 2 3 4 5 6 7 8 9
+    
+    is written row-major as
+
+    1 2 3 
+    4 5 6
+    7 8 9
+
+    and output is read column-major to get
+
+    1 4 7 2 5 8 3 6 9
+
+    >>> 'ABCDEFGHI' | TranspositionCipher(width=3)
+    'ADGBEHCFI'
+    """
+    def __init__(self, **kwargs):
+        self.width = kwargs.pop('width', 3)
+        super(TranspositionCipher, self).__init__(**kwargs)
+
+    def _encode_ords(self, plaintext):
+        # Save our input in case it's an iterator
+        text = list(plaintext)
+        while len(text) % self.width:
+            text.append('X')
+        height = len(text) // self.width
+        for i in range(len(text)):
+            yield text[i * self.width % len(text) + i // height]
 
 
 if __name__ == '__main__':
