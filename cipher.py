@@ -60,6 +60,14 @@ class Cipher(object):
         """ OVERRIDE ME: translate plain indices to cipher indices """
         return plainords
 
+    def __or__(self, other):
+        if not isinstance(Cipher, other):
+            raise TypeError("Can only compose ciphers with other ciphers")
+        return ComposedCipher(children=(self, other))
+
+    def __ror__(self, other):
+        return self.encode_ords(other)
+
 
 class SubstitutionCipher(Cipher):
     """ Substitution cipher base class """
@@ -228,8 +236,12 @@ class ComposedCipher(Cipher):
     """
     Composition of two ciphers.
 
-    >>> ComposedCipher(children=(CaesarCipher(rot_by=13), CaesarCipher(rot_by=-13))).encode('ABCD')
+    >>> rot13 = CaesarCipher(rot_by=13)
+    >>> inverserot13 = CaesarCipher(rot_by=-13)
+    >>> ComposedCipher(children=(rot13, inverserot13)).encode('ABCD')
     'ABCD'
+    >>> 'ABCD' | rot13 | inverserot13
+    [0, 1, 2, 3]
     """
     def __init__(self, **kwargs):
         self.children = kwargs.pop('children')
