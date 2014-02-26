@@ -2,7 +2,9 @@
 
 import random
 import itertools
+import re
 from fractions import gcd
+from string import punctuation
 
 class Cipher(object):
     """
@@ -13,7 +15,7 @@ class Cipher(object):
     >>> Cipher(alphabet='').encode('ABCD')
     Traceback (most recent call last):
       ...
-    ValueError: substring not found
+    AlphabetError: 'A' not in alphabet
     >>> Cipher(seed=1).random.random() == Cipher(seed=1).random.random()
     True
     """
@@ -35,7 +37,10 @@ class Cipher(object):
     def ord(self, char):
         """ Translate character to index into the alphabet """
         if isinstance(char, str) and len(char) == 1:
-            return self.alphabet.index(char)
+            try:
+                return self.alphabet.index(char)
+            except ValueError:
+                raise self.AlphabetError("%r not in alphabet" % char)
         else:
             return char  # Pass through if already an offset
 
@@ -66,7 +71,10 @@ class Cipher(object):
         return ComposedCipher(children=(self, other))
 
     def __ror__(self, other):
-        return self.encode_ords(other)
+        return self.encode(other)
+
+    class AlphabetError(Exception):
+        pass
 
 
 class SubstitutionCipher(Cipher):
@@ -156,7 +164,7 @@ class ReprCipherMixin(Cipher):
     """
     def encode(self, plaintext):
         """ Translate plaintext to ciphertext """
-        return ' '.join(self.encode_ords(plaintext))
+        return ' '.join(map(repr, self.encode_ords(plaintext)))
 
 
 class GCDCipher(SubstitutionCipher, ReprCipherMixin):
@@ -241,7 +249,7 @@ class ComposedCipher(Cipher):
     >>> ComposedCipher(children=(rot13, inverserot13)).encode('ABCD')
     'ABCD'
     >>> 'ABCD' | rot13 | inverserot13
-    [0, 1, 2, 3]
+    'ABCD'
     """
     def __init__(self, **kwargs):
         self.children = kwargs.pop('children')
@@ -251,6 +259,22 @@ class ComposedCipher(Cipher):
         for cipher in self.children:
             ords = cipher.encode_ords(ords)
         return ords
+
+
+class Smasher(Cipher):
+    """
+    Not really a cipher; this simple filter smashes non-essential characters
+    out of the input.
+
+    >>> 'ALSw#SI#UR as.,f' | Smasher()
+    'ALSWSIURASF'
+    """
+    def encode_ords(self, plaintext):
+        smashed = [c for c in plaintext
+                   if not c.isspace() and c not in punctuation]
+        smashed = [c.upper() if c.upper() in self.alphabet else 'X'
+                   for c in smashed]
+        return map(self.ord, smashed)
 
 
 if __name__ == '__main__':
