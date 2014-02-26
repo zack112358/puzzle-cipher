@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import random
+import itertools
+from fractions import gcd
 
 class Cipher(object):
     """
@@ -31,9 +33,9 @@ class Cipher(object):
 
     def ord(self, char):
         """ Translate character to index into the alphabet """
-        if isinstance(char, str):
+        if isinstance(char, str) and len(char) == 1:
             return self.alphabet.index(char)
-        elif isinstance(char, int):
+        else:
             return char  # Pass through if already an offset
 
     def chrs(self, offsets):
@@ -56,7 +58,6 @@ class Cipher(object):
     def _encode_ords(self, plainords):
         """ OVERRIDE ME: translate plain indices to cipher indices """
         return plainords
-
 
 
 class SubstitutionCipher(Cipher):
@@ -136,6 +137,37 @@ class SkewedOneTimePadCipher(SubstitutionCipher):
         alpha_size = len(self.alphabet)
         pad_value = int(self.random.expovariate(self.skew / alpha_size))
         return (plain_ord + pad_value) % alpha_size
+
+
+class ReprCipherMixin(Cipher):
+    """
+    Mixin makes a cipher's encoded output into representations of its "ordinal"
+    values instead of just chr translation --- useful if encode_ords returns
+    structures instead of numbers
+    """
+    def encode(self, plaintext):
+        """ Translate plaintext to ciphertext """
+        return ' '.join(self.encode_ords(plaintext))
+
+
+class GCDCipher(SubstitutionCipher, ReprCipherMixin):
+    """
+    This one is a little more creative. Each ordinal is represented by a pair of
+    numbers whose GCD is the ordinal plus one. As a consequence the output
+    doesn't map back to the alphabet without additional massaging.
+
+    >>> map(lambda pair:gcd(*pair), GCDCipher().encode_ords('ABCD'))
+    [1, 2, 3, 4]
+    """
+    def _encode_ord(self, plain_ord):
+        divisor = plain_ord + 1
+        a = 2
+        b = 2
+        while gcd(a, b) > 1:
+            a = self.random.randrange(1000 / divisor)
+            b = self.random.randrange(1000 / divisor)
+        return (a * divisor, b * divisor)
+
 
 
 if __name__ == '__main__':
