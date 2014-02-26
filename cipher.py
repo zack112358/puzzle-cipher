@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+Module describing a bunch of simple ciphers for making puzzles. None of them
+have any particular cryptographic merit as such, but they're 
+
+>>> 'ABCD' | CaesarCipher()
+'NOPQ'
+>>> 'ABCD' | CaesarCipher() | CaesarCipher()
+'ABCD'
+"""
+
 import random
 import itertools
 import re
