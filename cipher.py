@@ -24,7 +24,7 @@ class Cipher(object):
         self.random.seed(self.seed)
         super(Cipher, self).__init__(**kwargs)
 
-    def reset_rand(self):
+    def reset(self):
         self.random.seed(self.seed)
 
     def ords(self, text):
@@ -52,7 +52,7 @@ class Cipher(object):
 
     def encode_ords(self, plaintext):
         """ Translate plaintext to cipher indices """
-        self.reset_rand()
+        self.reset()
         return self._encode_ords(self.ords(plaintext))
 
     def _encode_ords(self, plainords):
@@ -168,6 +168,59 @@ class GCDCipher(SubstitutionCipher, ReprCipherMixin):
             b = self.random.randrange(1000 / divisor)
         return (a * divisor, b * divisor)
 
+
+class SimpleFeedbackCipher(SubstitutionCipher):
+    """
+    For this one, we feed back our output characters into the input so that
+    output_i = input_i + output_{i-1}
+
+    >>> SimpleFeedbackCipher().encode('AAAABBBBCCCCDDDD')
+    'NNNNOPQRTVXZCFIL'
+    """
+
+    def __init__(self, **kwargs):
+        self.init_rot_by = kwargs.pop('init_rot_by', 13)
+        super(SimpleFeedbackCipher, self).__init__(**kwargs)
+
+    def _encode_ord(self, plain_ord):
+        output = (plain_ord + self.feedback) % len(self.alphabet)
+        self.feedback = output
+        return output
+
+    def reset(self):
+        super(SimpleFeedbackCipher, self).reset()
+        self.feedback = self.init_rot_by
+
+
+class IndexedSubstitutionCipher(Cipher):
+    """ Substitution cipher base class that also passes offset """
+    def __init__(self, **kwargs):
+        super(IndexedSubstitutionCipher, self).__init__(**kwargs)
+
+    def _encode_ords(self, plain_ords):
+        i = 0
+        for plain_ord in plain_ords:
+            yield self._encode_ord(plain_ord, i)
+            i += 1
+
+
+class RotatingCipher(IndexedSubstitutionCipher):
+    """
+    Caesar cipher where key rotates by fixed amount each letter
+
+    >>> RotatingCipher().encode('AAAA')
+    'NOPQ'
+    >>> RotatingCipher().encode('AZYX')
+    'NNNN'
+    """
+    def __init__(self, **kwargs):
+        self.init_rot_by = kwargs.pop('init_rot_by', 13)
+        self.increment = kwargs.pop('increment', 1)
+        super(RotatingCipher, self).__init__(**kwargs)
+
+    def _encode_ord(self, plain, i):
+        alpha_size = len(self.alphabet)
+        return (plain + self.init_rot_by + self.increment * i) % alpha_size
 
 
 if __name__ == '__main__':
