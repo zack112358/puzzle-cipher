@@ -235,7 +235,12 @@ class SquareFeedbackCipher(SimpleFeedbackCipher):
 
 
 class IndexedSubstitutionCipher(Cipher):
-    """ Substitution cipher base class that also passes offset """
+    """
+    Substitution cipher base class that also passes offset to _encode_ord
+
+    >>> 'ABCD' | IndexedSubstitutionCipher()
+    'ABCD'
+    """
     def __init__(self, **kwargs):
         super(IndexedSubstitutionCipher, self).__init__(**kwargs)
 
@@ -244,6 +249,9 @@ class IndexedSubstitutionCipher(Cipher):
         for plain_ord in plain_ords:
             yield self._encode_ord(plain_ord, i)
             i += 1
+
+    def _encode_ord(self, plain_ord, i):
+        return plain_ord
 
 
 class RotatingCipher(IndexedSubstitutionCipher):
