@@ -88,12 +88,22 @@ class Cipher(object):
 
 
 class SubstitutionCipher(Cipher):
-    """ Substitution cipher base class """
+    """
+    Substitution cipher base class. For ciphers that encrypt one letter at a
+    time.
+
+    >>> SubstitutionCipher().encode('ABCD')
+    'ABCD'
+    """
     def __init__(self, **kwargs):
         super(SubstitutionCipher, self).__init__(**kwargs)
 
     def _encode_ords(self, plain_ords):
         return map(self._encode_ord, plain_ords)
+
+    def _encode_ord(self, plain_ord):
+        """ OVERRIDE ME: encrypt an individual ordinal """
+        return plain_ord
 
 
 class CaesarCipher(SubstitutionCipher):
