@@ -339,6 +339,26 @@ class ColumnarCipher(Cipher):
                        self.column_order[i // height]]
 
 
+class OneTimePadCipher(IndexedSubstitutionCipher):
+    """
+    Uses a one-time-pad you specify. Another way to look at it is that it
+    merges two input streams of text.
+
+    >>> 'ABCD' | OneTimePadCipher(pad='AAAA')
+    'ABCD'
+    >>> 'ABCD' | OneTimePadCipher(pad=[0, -1, -2, -3])
+    'AAAA'
+    """
+    def __init__(self, **kwargs):
+        self.pad = kwargs.pop('pad')
+        super(OneTimePadCipher, self).__init__(**kwargs)
+        # Only use ord after the alphabet has been set by super init
+        self.pad = map(self.ord, self.pad)
+
+    def _encode_ord(self, plain_ord, i):
+        return (self.pad[i] + plain_ord) % len(self.alphabet)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
