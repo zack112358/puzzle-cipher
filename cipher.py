@@ -313,11 +313,11 @@ class ComposedCipher(Cipher):
         self.children = kwargs.pop('children')
         super(ComposedCipher, self).__init__(**kwargs)
 
-    def _encode_ords(self, ords):
+    def encode(self, text):
         for cipher in self.children:
-            ords = cipher.encode_ords(ords)
-        return ords
-
+            text = cipher.encode(text)
+        return text
+    
 
 class Smasher(Cipher):
     """
@@ -365,7 +365,7 @@ class ColumnarCipher(Cipher):
         # Save our input in case it's an iterator
         text = list(plaintext)
         while len(text) % self.width:
-            text.append('X')
+            text.append(0)
         height = len(text) // self.width
         for i in range(len(text)):
             yield text[i * self.width % len(text) + 
