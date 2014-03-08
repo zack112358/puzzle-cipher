@@ -28,14 +28,23 @@ class Cipher(object):
     AlphabetError: 'A' not in alphabet
     >>> Cipher(seed=1).random.random() == Cipher(seed=1).random.random()
     True
+    >>> Cipher.alphabet = ''
+    >>> Cipher().encode('ABCD')
+    Traceback (most recent call last):
+      ...
+    AlphabetError: 'A' not in alphabet
+    >>> Cipher.alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     """
     def __init__(self, **kwargs):
-        self.alphabet = kwargs.pop('alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        if 'alphabet' in kwargs:
+            self.alphabet = kwargs.pop('alphabet')
         self.seed = kwargs.pop('seed', 0)
         self.random = kwargs.pop('random', random.Random())
         if self.seed is not None:
             self.random.seed(self.seed)
         super(Cipher, self).__init__(**kwargs)
+
+    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
     def reset(self):
         self.random.seed(self.seed)
