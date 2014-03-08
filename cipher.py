@@ -302,6 +302,7 @@ class ComposedCipher(Cipher):
     'ABCD'
     >>> 'ABCD' | rot13 | inverserot13
     'ABCD'
+    >>> 'ABCD' | (rot13 | inverserot13)
     """
     def __init__(self, **kwargs):
         self.children = kwargs.pop('children')
