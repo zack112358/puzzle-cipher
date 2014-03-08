@@ -85,9 +85,13 @@ class Cipher(object):
         return plainords
 
     def __or__(self, other):
-        if not isinstance(Cipher, other):
-            raise TypeError("Can only compose ciphers with other ciphers")
-        return ComposedCipher(children=(self, other))
+        try:
+            if not isinstance(other, Cipher):
+                raise TypeError("Can only compose ciphers with other ciphers")
+            return ComposedCipher(children=(self, other))
+        except:
+            import sys; exc_info = sys.exc_info()
+            import pdb; pdb.set_trace()
 
     def __ror__(self, other):
         return self.encode(other)
@@ -303,6 +307,7 @@ class ComposedCipher(Cipher):
     >>> 'ABCD' | rot13 | inverserot13
     'ABCD'
     >>> 'ABCD' | (rot13 | inverserot13)
+    'ABCD'
     """
     def __init__(self, **kwargs):
         self.children = kwargs.pop('children')
